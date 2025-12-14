@@ -86,3 +86,8 @@ func GetReadonlyMode() bool {
 func GetYoutubeApiKey() string {
         return youtube_api_key
 }
+
+// HasYoutubeApiKey reports whether a YouTube API key was provided.
+func HasYoutubeApiKey() bool {
+	return youtube_api_key != ""
+}

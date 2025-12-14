@@ -94,6 +94,8 @@ On the first run, CouchTube will create a `couchtube.db` SQLite database file, i
 
 CouchTube loops through a channel's videos and only shows the section of the video marked by `sectionStart` and `sectionEnd`. The scheduler aims to distribute these videos throughout the day, so two different users should see the same video for a given channel.
 
+If `YOUTUBE_API_KEY` is not set, CouchTube will not call the YouTube API. In that case, ensure every video in your JSON includes explicit `sectionEnd` values (matching the behavior before the auto-fetch feature).
+
 ### Environment Variables
 
 You can configure CouchTube using environment variables.
@@ -105,6 +107,7 @@ You can configure CouchTube using environment variables.
 | `JSON_FILE_PATH`     | The path to the JSON file used by CouchTube.                                |
 | `FULL_SCAN`          | Overwrites the existing data in the DB with the videos in JSON file.        |
 | `READONLY_MODE`      | If set to `true`, CouchTube will run in read-only mode, preventing changes. |
+| `YOUTUBE_API_KEY`    | Optional. When set, CouchTube fetches missing `sectionEnd` values from YouTube; if omitted, provide `sectionEnd` manually. |
 
 
 ### Custom JSON Format for Channel and Video Lists

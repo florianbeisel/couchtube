@@ -129,29 +129,34 @@ func populateDatabase(db *sql.DB) error {
                                 return err
                         }
 
-                        for _, video := range channel.Videos {
-                                if video.SectionEnd == 0 && video.SectionStart == 0 {
-                                        // No end defined, default to full vid length
-                                        ctx := context.Background()
-                                        youtubeService, err := youtube.NewService(ctx, option.WithAPIKey(config.GetYoutubeApiKey()))
-                                        if err != nil {
-                                                log.Fatalf("Error creating YouTube service: %v", err)
-                                        }
-                                        call := youtubeService.Videos.List([]string{"contentDetails"}).Id(video.Id)
-                                        response, err := call.Do()
-                                        if err != nil {
-                                                log.Fatalf("Error fetching video details: %v", err)
-                                        }
-                                        if len(response.Items) == 0 {
-                                                log.Fatalf("No video found with ID: %s",video.Id)
-                                        }
-                                        duration := response.Items[0].ContentDetails.Duration
-                                        seconds, err := parseISO8601DurationToSeconds(duration)
-                                        if err != nil {
-                                                log.Fatalf("Error parsing duration: %v", err)
-                                        }
-                                        video.SectionEnd = seconds
-                                }
+				for _, video := range channel.Videos {
+					if video.SectionEnd == 0 && video.SectionStart == 0 {
+						// No end defined, attempt to fetch full video length if the feature is enabled.
+						if !config.HasYoutubeApiKey() {
+							log.Printf("YOUTUBE_API_KEY not set; skipping video %s because section_end is missing. Provide section_end manually or set the key to enable auto-fetch.", video.Id)
+							continue
+						}
+
+						ctx := context.Background()
+						youtubeService, err := youtube.NewService(ctx, option.WithAPIKey(config.GetYoutubeApiKey()))
+						if err != nil {
+							log.Fatalf("Error creating YouTube service: %v", err)
+						}
+						call := youtubeService.Videos.List([]string{"contentDetails"}).Id(video.Id)
+						response, err := call.Do()
+						if err != nil {
+							log.Fatalf("Error fetching video details: %v", err)
+						}
+						if len(response.Items) == 0 {
+							log.Fatalf("No video found with ID: %s",video.Id)
+						}
+						duration := response.Items[0].ContentDetails.Duration
+						seconds, err := parseISO8601DurationToSeconds(duration)
+						if err != nil {
+							log.Fatalf("Error parsing duration: %v", err)
+						}
+						video.SectionEnd = seconds
+					}
                                 videoID, err := insertOrGetVideoID(tx, video, insertVideoQuery)
                                 if err != nil {
                                         return err
